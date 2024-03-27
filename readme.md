@@ -70,6 +70,7 @@ I sent these questions to Mark.
 
 ## Design
 
+
 ## Process
 I'm going to be using git to track my code. My plan is to have everything set up in such a way that each "ticket" defined below will be done in a separate local branch and then squashed and merged into master after they are implemented. Each ticket will also include a note determining if it is a need, a want, or a nice-to-have. Needs are explicitly called out as necessary. Wants are things that I really want to put in, but will be dependant on time. Nice to haves are things I would add given time but don't necessarily expect to get done in the 72 hour timeline. 
 
@@ -80,10 +81,12 @@ Ex: MAAS-101 would be the first ticket for question 1.
 > Note: I am editing this in VS Code. In order for the check boxes below to show up in the preview as they do in Github I had to add the [Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) plugin. To install it in your instance, open the Quick Open (`ctrl` + `P`) and paste `ext install yzhang.markdown-all-in-one`
 - [x] MAAS-001: Initial setup of documentation
   - If this doc is done, so is this ticket
-
-- [ ] MAAS-101: Set up a golang API with GET /memes defined
-  - Need
+- [x] MAAS-101: Set up a golang API with GET /memes defined - NEED
   - At this point we just want to return 200 OK for anything
+  - Server terminal:  
+    ![Server Terminal](./screen-shots/101a.png)
+  - Curl terminal:   
+    ![Curl Terminal](./screen-shots/101b.png)
 - [ ] MAAS-102: Take in the `lon`, `lat`, and `query`  
   - Need 
   - Update teh /memes api to return a json string formatted as such
@@ -129,3 +132,8 @@ Ex: MAAS-101 would be the first ticket for question 1.
 
 ## References
 I'm gonna be googling a lot of stuff to try to get this worked out in time. As such, I am going to try to keep track of the different things I used. Simple syntax checks will be skipped, but I am going to need to look up some tutorials for setup. 
+
+MAAS-101:
+- https://go.dev/doc/tutorial/web-service-gin 
+- https://craig-childs.medium.com/testing-gin-json-responses-1f258ce3b0b1
+  
