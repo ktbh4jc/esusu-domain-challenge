@@ -1,4 +1,4 @@
-module maas/web-service
+module maas
 
 go 1.18
 

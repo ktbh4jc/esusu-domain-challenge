@@ -74,7 +74,7 @@ I sent these questions to Mark.
 ## Process
 I'm going to be using git to track my code. My plan is to have everything set up in such a way that each "ticket" defined below will be done in a separate local branch and then squashed and merged into master after they are implemented. Each ticket will also include a note determining if it is a need, a want, or a nice-to-have. Needs are explicitly called out as necessary. Wants are things that I really want to put in, but will be dependant on time. Nice to haves are things I would add given time but don't necessarily expect to get done in the 72 hour timeline. 
 
-Tickets will be formated as such MAAS-[Question Number][SubStep Number with 2 digits]  
+Tickets will be formatted as such MAAS-[Question Number][SubStep Number with 2 digits]  
 Ex: MAAS-101 would be the first ticket for question 1.
 
 ## Tickets
@@ -87,16 +87,31 @@ Ex: MAAS-101 would be the first ticket for question 1.
     ![Server Terminal](./screen-shots/101a.png)
   - Curl terminal:   
     ![Curl Terminal](./screen-shots/101b.png)
-- [ ] MAAS-102: Take in the `lon`, `lat`, and `query`  
-  - Need 
-  - Update teh /memes api to return a json string formatted as such
+- [x] MAAS-102: Take in the `lon`, `lat`, and `query` - NEED 
+  - Update the /memes api to return a json string formatted as such
   ```json
   {
-    "lon": #{lon from query params},
-    "lat": #{lat from query params},
-    "query": #{query from query params}
+    "top_text": #{query},
+    "bottom_text": "Bottom Text",
+    "image_location": #{lat x lon},
   }
   ```
+  - if fields are missing, use default
+   ```json
+    {
+      "top_text": "Up Top",
+      "bottom_text": "Bottom Text",
+      "image_location": "Nowhere and everywhere"
+    }
+  ```
+  - lat and lon are both floats
+  - query is a free text field
+  - ~~For the sake of this assignment, I am going to assume proper input~~ Adding slight validation was pretty quick. 
+  - Terminal Screenshot: ![terminal](./screen-shots/102a.png)
+  - Postman Screenshots: ![no params](./screen-shots/102b.png)
+    ![good params](./screen-shots/102c.png)
+    ![bad input](./screen-shots/102d.png)
+
 - [ ] MAAS-103: Build out some form of image generation - WANT
   - Vague at the moment because I need to get the NEEDS done before I get distracted into the WANTs
 - [ ] MAAS-201: Integrate with a Database - NEED
@@ -137,3 +152,5 @@ MAAS-101:
 - https://go.dev/doc/tutorial/web-service-gin 
 - https://craig-childs.medium.com/testing-gin-json-responses-1f258ce3b0b1
   
+MAAS-102: Not gonna lie, I forgot I was trying to keep track of these and forget which ones I was using, so here are the ones I used after remembering.  
+- https://github.com/gin-gonic/gin/blob/master/context_test.go 
