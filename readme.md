@@ -5,6 +5,14 @@ This is where I plan to walk you through my approach to this test.
 My first step is to try to list out all requirements for each question in order to make sure I fully grasp the problem. I will also be adding in my initial ideas with after a `>` in the line below, just to show my notes. 
 
 
+## Running this project
+Note: I am doing this on my Ubuntu laptop, so I will be writing these instructions assuming a unix-like environment. Any specific installation notes will be for Ubuntu. I expect this would work on MacOS as well, but installation steps would be different.
+1) Ensure `go` is installed and working on your machine.
+2) navigate to the `meme-test` directory (where this readme is stored). 
+3) Run `go build` to compile
+4) Run `go run .` to start the server
+5) Run `go test ./...` to run all tests
+
 ## Requirements
 Memes as a Service (MaaS) is an API for fetching memes with one API call
 
@@ -50,17 +58,23 @@ service?
 - How do you support geographically diverse clients? As you scale the system out
 horizontally, how do you continue to keep track of tokens without slowing down
 the system?
+
+As I was working on MAAS-201 I found [this writeup](https://www.mongodb.com/developer/languages/go/interact-aws-lambda-function-go/) that honestly sums up a decent chunk of how I wanted to answer problem 3 so I thought I would include it 
+
 ### Problem 4
 Make sure only the high rollers get the AI memes. Ensure this doesn't slow anything down (I feel like the solution here is to just have this as part of the token check? Like, each user will have a token count and a "AiEnabled" flag or something)
 
 ## Questions
-On the day I was sent this, I compiled a list of questions I still had for the sake of getting things sorted. 
+On the day I was sent this, I compiled a list of questions I still had for the sake of getting things sorted.  
+Note, for the sake of time I had to make some assumptions on this so I will be including those below.  
 1) Is there a preferred database I should use? 
+   > Assumption: PostgresQL and MongoDB are listed in the JD and I have never used MongoDB, so I went with that to learn it.
 2) Do I need to worry about bad input? Examples: 
-  - someone provides a non-expected query parameter. 
-  - Someone requests a meme when out of tokens
-  - Someone provides a latitude or longitude that is improperly formatted (ex: lat=`40°73'61.0"N` or `lat=yes`)?
-  - Someone provides a latitude or longitude that is impossible (ex: lat=500.1)
+     - someone provides a non-expected query parameter. 
+     - Someone requests a meme when out of tokens
+     - Someone provides a latitude or longitude that is improperly formatted (ex: lat=`40°73'61.0"N` or `lat=yes`)?
+     - Someone provides a latitude or longitude that is impossible (ex: lat=500.1)
+    > Assumption: I decided to go with the middle ground here. Extra params are allowed but ignored. `lat` and `lon` just have to be floats. A meme request with no tokens should 400. 
 3) Is there any expectation of hosting this outside of localhost? If not, are there bonus points for hosting it outside of localhost?
 4) Am I implementing actual authentication/authorization, or is the expectation to just have a dummy auth key for a user? 
 5) For question 2.d, is it 100 requests per second to the users api that just handles updating token info, or is that for the meme generation as well? My main concern on this one is more my laptop handling the image generation. 
@@ -114,8 +128,15 @@ Ex: MAAS-101 would be the first ticket for question 1.
 
 - [ ] MAAS-103: Build out some form of image generation - WANT
   - Vague at the moment because I need to get the NEEDS done before I get distracted into the WANTs
-- [ ] MAAS-201: Integrate with a Database - NEED
+  
+- [x] MAAS-201: Integrate with a Database - NEED
   - The JD lists MongoDB and PostgresQL, so I will use one of those based entirely on what looks easiest at the moment.
+  - I haven't heard back on my questions, so I am gonna just go with MongoDB since I haven't used it before and I'm always looking to learn. 
+  - I threw together a quick .env.local file with a default user who will expire in a week. With more time I would do more with preparing for different environments, but for now this works as a proof of concept. 
+  - Terminal where I test the connection ![terminal](./screen-shots/201a.png)
+  - At the moment I plan on eventually dropping that endpoint, so I didn't add unit tests. If this endpoint sticks around, I will change that. 
+  - Side update: the rest of my notes may be somewhat sparse. In order to make the 72 hour deadline, I am going to have to pick up the pace. I will try to keep key points present.
+
 - [ ] MAAS-202: Build out "USER" object that gets stored in the DB  - NEED
   - Contains at least the following fields: `USER_ID`, `AUTH_KEY`, `IS_ADMIN` and `TOKENS_REMAINING`
   - -`USER_ID` will either be a random number or just an incremented value. 
@@ -152,5 +173,9 @@ MAAS-101:
 - https://go.dev/doc/tutorial/web-service-gin 
 - https://craig-childs.medium.com/testing-gin-json-responses-1f258ce3b0b1
   
-MAAS-102: Not gonna lie, I forgot I was trying to keep track of these and forget which ones I was using, so here are the ones I used after remembering.  
+MAAS-102: Not gonna lie, I forgot I was trying to keep track of these and forget which ones I was using, so here is the one I used after remembering.  
 - https://github.com/gin-gonic/gin/blob/master/context_test.go 
+
+MAAS-201: 
+- https://www.mongodb.com/docs/drivers/go/current/fundamentals/connections/connection-guide/
+- https://github.com/joho/godotenv 

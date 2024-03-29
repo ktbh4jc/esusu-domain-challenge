@@ -19,7 +19,7 @@ func performRequest(r http.Handler, method, path string) *httptest.ResponseRecor
 
 // Note: what follows is arguably not the best approach as these are kinda closer to integration tests than unit tests.
 // Given time to scale this project up I would focus on splitting my web service tests from my meme maker tests and test the boundaries.
-// However since (for now) this project is just a single instance, I am going to do the easy test now.
+// However since (for now) this project is just a single instance, I am going to do the easy test.
 func TestMemeRoute_WithNoParams_RendersDefaultMeme(t *testing.T) {
 	expectedBody := meme_maker.NewMeme().MakeMap()
 
