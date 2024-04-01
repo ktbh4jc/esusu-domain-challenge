@@ -64,6 +64,7 @@ func setupRouter(userService *user_service.UserService) *gin.Engine {
 	router.GET("/mongo", userService.Ping)
 	router.POST("/users/reset", userService.ResetDb)
 	router.GET("/users/debug", userService.AllUsersDebug)
+	router.GET("/users/:id", userService.UserById)
 	return router
 }
 

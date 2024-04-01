@@ -11,7 +11,9 @@ import (
 	user_service "maas/user-service"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoDBUserRepository struct {
@@ -52,7 +54,28 @@ func (m *MongoDBUserRepository) ResetDb() ([]interface{}, error) {
 	return insertResult.InsertedIDs, nil
 }
 
-// AllUsers implements user_service.UserRepository.AllUsers
+func (m *MongoDBUserRepository) User(id string) (*user_model.User, error) {
+	database := m.client.Database("maas")
+	maas_users_collection := database.Collection("maas_users")
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{{Key: "_id", Value: objectId}}
+
+	opts := options.FindOne()
+
+	var user user_model.User
+
+	err = maas_users_collection.FindOne(*m.ctx, filter, opts).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (m *MongoDBUserRepository) AllUsers() ([]user_model.User, error) {
 	database := m.client.Database("maas")
 	maas_users_collection := database.Collection("maas_users")
@@ -73,7 +96,7 @@ func (m *MongoDBUserRepository) AllUsers() ([]user_model.User, error) {
 
 // Ping implements user_service.UserRepository.Ping
 func (m *MongoDBUserRepository) Ping() error {
-	if err := m.client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Err(); err != nil {
+	if err := m.client.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		return &error_types.MongoConnectionError{Err: err}
 	}
 	loggers.InfoLog.Println("Pinged your deployment. You successfully connected to MongoDB!")

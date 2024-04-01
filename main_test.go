@@ -34,9 +34,10 @@ func TestMain(m *testing.M) {
 
 type MockUserRepository struct{}
 
-func (m *MockUserRepository) ResetDb() ([]interface{}, error)      { panic("unimplemented") }
-func (m *MockUserRepository) Ping() error                          { panic("unimplemented") }
-func (m *MockUserRepository) AllUsers() ([]user_model.User, error) { panic("unimplemented") }
+func (m *MockUserRepository) ResetDb() ([]interface{}, error)          { panic("unimplemented") }
+func (m *MockUserRepository) Ping() error                              { panic("unimplemented") }
+func (m *MockUserRepository) AllUsers() ([]user_model.User, error)     { panic("unimplemented") }
+func (m *MockUserRepository) User(id string) (*user_model.User, error) { panic("unimplemented") }
 
 // Note: what follows is arguably not the best approach as these are kinda closer to integration tests than unit tests.
 // Given time to scale this project up I would focus on splitting my web service tests from my meme maker tests and test the boundaries.

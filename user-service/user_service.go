@@ -14,6 +14,7 @@ type UserRepository interface {
 	ResetDb() ([]interface{}, error)
 	Ping() error
 	AllUsers() ([]user_model.User, error)
+	User(id string) (*user_model.User, error)
 }
 
 type UserService struct {
@@ -69,4 +70,14 @@ func (s *UserService) AllUsersDebug(ginContext *gin.Context) {
 		return
 	}
 	ginContext.IndentedJSON(http.StatusOK, users)
+}
+
+func (s *UserService) UserById(ginContext *gin.Context) {
+	user, err := s.Repo.User(ginContext.Param("id"))
+	if err != nil {
+		loggers.ErrorLog.Printf("Error getting user:\n%s", err.Error())
+		ginContext.IndentedJSON(http.StatusNotFound, "error getting user")
+		return
+	}
+	ginContext.IndentedJSON(http.StatusOK, user)
 }

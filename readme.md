@@ -161,12 +161,17 @@ Ex: MAAS-101 would be the first ticket for question 1.
   - ![reset mongo call](./screen-shots/202b.png)
   - ![all users debug call](./screen-shots/202c.png)
 
-- [ ] MAAS-203: Create GET /users/[UserId] endpoint - NEED
+- [x] MAAS-203: Create GET /users/[UserId] endpoint - NEED
   - At this point, anyone can get any user.
   - Returns a JSON representation of the user
+  - ![terminal window](./screen-shots/203a.png)
+  - ![Retrieve Existing User](./screen-shots/203b.png)
+  - ![Retrieve after user no longer present](./screen-shots/203c.png)
+  
 - [ ] MAAS-204: Update GET /memes to take users into consideration - NEED
    -  When a user with no tokens left requests a meme, return a 400
    -  When a user with tokens requests a meme, reduce the token count by 1 and return a meme
+  
 - [ ] MAAS-205: Really simple auth
   - I am operating under the following assumptions
     -  auth will just be a string stored in the header
@@ -205,3 +210,4 @@ MAAS-201:
 MAAS-202:
 - https://www.mongodb.com/blog/post/quick-start-golang--mongodb--modeling-documents-with-go-data-structures (and other posts in the series)
 - https://medium.com/@moeid_72300/elevate-your-golang-tests-with-database-mocking-a-step-by-step-guide-ee961da7600 
+- https://medium.com/strike-sh/golang-using-an-inmemory-mongodb-for-unit-testing-with-transactions-866b5f174cbe 
