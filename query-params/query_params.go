@@ -1,14 +1,15 @@
 package query_params
 
 import (
-	"github.com/gin-gonic/gin"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type QueryParams struct {
-	Lon   float64 `json:lon assert:float`
-	Lat   float64 `json:lat assert:float`
-	Query string  `json:query`
+	Lon   float64 `json:"lon"`
+	Lat   float64 `json:"lat"`
+	Query string  `json:"query"`
 }
 
 func ExtractParams(c *gin.Context) (*QueryParams, error) {

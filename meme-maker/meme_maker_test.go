@@ -1,8 +1,9 @@
 package meme_maker
 
 import (
-	query_params "maas/query-params"
 	"testing"
+
+	query_params "maas/query-params"
 
 	"github.com/stretchr/testify/assert"
 )

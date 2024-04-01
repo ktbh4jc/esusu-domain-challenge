@@ -2,16 +2,23 @@
 
 This is where I plan to walk you through my approach to this test. 
 
+Design details are in design.md
+
 My first step is to try to list out all requirements for each question in order to make sure I fully grasp the problem. I will also be adding in my initial ideas with after a `>` in the line below, just to show my notes. 
 
 
 ## Running this project
-Note: I am doing this on my Ubuntu laptop, so I will be writing these instructions assuming a unix-like environment. Any specific installation notes will be for Ubuntu. I expect this would work on MacOS as well, but installation steps would be different.
+Note: I am doing this on my Ubuntu laptop, so I will be writing these instructions assuming a unix-like environment. Any specific installation notes will be for Ubuntu. I expect this would work on MacOS as well, but am unable to check any specific changes.
 1) Ensure `go` is installed and working on your machine.
 2) navigate to the `meme-test` directory (where this readme is stored). 
 3) Run `go build` to compile
 4) Run `go run .` to start the server
 5) Run `go test ./...` to run all tests
+
+## Connecting to MongoDB
+If you are using VS Code you can install the official [MongoDB plugin](https://marketplace.visualstudio.com/items?itemName=mongodb.mongodb-vscode) by launching VS Code Quick Open (`ctrl` + `p`) and then typing `ext install mongodb.mongodb-vscode`
+When prompted, use the connection string `mongodb+srv://default:FQSqZA0PQdEHJQDM@maascluster0.3daukhq.mongodb.net/?retryWrites=true&w=majority&appName=MaasCluster0`
+Note: The above user will expire on Thursday April 4. 
 
 ## Requirements
 Memes as a Service (MaaS) is an API for fetching memes with one API call
@@ -82,8 +89,16 @@ Note, for the sake of time I had to make some assumptions on this so I will be i
 
 I sent these questions to Mark. 
 
-## Design
+UPDATE, I got an email back. Response is below. Anything on a new line following a `>` was added by me. 
 
+1) There is no preferred DB, we use postgres here but no preference
+2) Great question, no need to worry about bad input. no need to put it in the code, you raising the question proves you are thinking about this in how you develop
+3) we just want to run it, the preference would be for a local host, in order to avoid barriers to access when reviewing your submission
+4) dummy is fine
+5) since the guidance is to run it on a local host, whatever you can do is fine. If it doesn't meet the benchmark we requested then just explain how you would have reached it on a non local host
+6) We all use Macbooks here so no need to worry about running this on a windows machine
+
+> I followed up since I have already been using a cloud instance of MongoDB and Mark said that should be fine. For test purposes, I have connected to my MongoDB instance from another computer. 
 
 ## Process
 I'm going to be using git to track my code. My plan is to have everything set up in such a way that each "ticket" defined below will be done in a separate local branch and then squashed and merged into master after they are implemented. Each ticket will also include a note determining if it is a need, a want, or a nice-to-have. Needs are explicitly called out as necessary. Wants are things that I really want to put in, but will be dependant on time. Nice to haves are things I would add given time but don't necessarily expect to get done in the 72 hour timeline. 
@@ -137,9 +152,15 @@ Ex: MAAS-101 would be the first ticket for question 1.
   - At the moment I plan on eventually dropping that endpoint, so I didn't add unit tests. If this endpoint sticks around, I will change that. 
   - Side update: the rest of my notes may be somewhat sparse. In order to make the 72 hour deadline, I am going to have to pick up the pace. I will try to keep key points present.
 
-- [ ] MAAS-202: Build out "USER" object that gets stored in the DB  - NEED
+- [x] MAAS-202: Build out "USER" object that gets stored in the DB  - NEED
   - Contains at least the following fields: `USER_ID`, `AUTH_KEY`, `IS_ADMIN` and `TOKENS_REMAINING`
-  - -`USER_ID` will either be a random number or just an incremented value. 
+  - ~~-`USER_ID` will either be a random number or just an incremented value. ~~
+  - Upon reading a bit more into mongodb, I am going to just have the automatically generated `_id` field count as the user id. 
+  - I'm also going to make a couple of more dangerous endpoints for the sake of debugging. Namely `POST /users/reset`, which resets the database to a known user set, and `GET /users/debug` which returns all users regardless of if the requester is an admin. 
+  - ![Terminal](./screen-shots/202a.png)
+  - ![reset mongo call](./screen-shots/202b.png)
+  - ![all users debug call](./screen-shots/202c.png)
+
 - [ ] MAAS-203: Create GET /users/[UserId] endpoint - NEED
   - At this point, anyone can get any user.
   - Returns a JSON representation of the user
@@ -165,6 +186,7 @@ Ex: MAAS-101 would be the first ticket for question 1.
   - At least some of it will be hosting on AWS in lambdas, but the exact breakdown will come later. 
 - [ ] MAAS-301+: See if I can implement some of my 300 plan. 
 - [ ] MAAS-400: Write up AI plans - NEED
+- [ ] MAAS-002: Re-read the code, self PR. 
 
 ## References
 I'm gonna be googling a lot of stuff to try to get this worked out in time. As such, I am going to try to keep track of the different things I used. Simple syntax checks will be skipped, but I am going to need to look up some tutorials for setup. 
@@ -179,3 +201,7 @@ MAAS-102: Not gonna lie, I forgot I was trying to keep track of these and forget
 MAAS-201: 
 - https://www.mongodb.com/docs/drivers/go/current/fundamentals/connections/connection-guide/
 - https://github.com/joho/godotenv 
+
+MAAS-202:
+- https://www.mongodb.com/blog/post/quick-start-golang--mongodb--modeling-documents-with-go-data-structures (and other posts in the series)
+- https://medium.com/@moeid_72300/elevate-your-golang-tests-with-database-mocking-a-step-by-step-guide-ee961da7600 
