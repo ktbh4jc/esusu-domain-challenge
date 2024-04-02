@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	auth_service "maas/auth-service"
 	meme_maker "maas/meme-maker"
 	user_model "maas/user-model"
 	user_service "maas/user-service"
@@ -27,13 +28,17 @@ func performRequest(r http.Handler, method, path string) *httptest.ResponseRecor
 }
 
 func TestMain(m *testing.M) {
-	userService = user_service.NewUserService(&MockUserRepository{})
+	authService := auth_service.NewAuthService(&MockUserRepository{})
+	userService = user_service.NewUserService(&MockUserRepository{}, *authService)
 	router = setupRouter(userService)
 	m.Run()
 }
 
 type MockUserRepository struct{}
 
+func (m *MockUserRepository) UserByAuthHeader(auth string) (*user_model.User, error) {
+	panic("unimplemented")
+}
 func (m *MockUserRepository) ResetDb() ([]interface{}, error)          { panic("unimplemented") }
 func (m *MockUserRepository) Ping() error                              { panic("unimplemented") }
 func (m *MockUserRepository) AllUsers() ([]user_model.User, error)     { panic("unimplemented") }

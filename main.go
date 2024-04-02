@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	auth_service "maas/auth-service"
 	"maas/loggers"
 	meme_maker "maas/meme-maker"
 	query_params "maas/query-params"
@@ -29,7 +30,8 @@ func getMeme(ctx *gin.Context) {
 
 func setupUserService(client *mongo.Client, ctx *context.Context) *user_service.UserService {
 	mongoUserDb := user_db.NewMongoDBUserRepository(client, ctx)
-	return user_service.NewUserService(mongoUserDb)
+	authService := auth_service.NewAuthService(mongoUserDb)
+	return user_service.NewUserService(mongoUserDb, *authService)
 }
 
 func connect(ctx context.Context) (*mongo.Client, error) {
@@ -64,6 +66,7 @@ func setupRouter(userService *user_service.UserService) *gin.Engine {
 	router.GET("/mongo", userService.Ping)
 	router.POST("/users/reset", userService.ResetDb)
 	router.GET("/users/debug", userService.AllUsersDebug)
+	router.GET("/users", userService.AllUsers)
 	router.GET("/users/:id", userService.UserById)
 	return router
 }

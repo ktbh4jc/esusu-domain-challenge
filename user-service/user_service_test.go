@@ -3,6 +3,8 @@ package user_service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	auth_service "maas/auth-service"
 	"maas/loggers"
 	"net/http"
 	"net/http/httptest"
@@ -13,9 +15,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+const (
+	adminIDString   = "111111111111111111111111"
+	defaultIDString = "222222222222222222222222"
+	otherIDString   = "333333333333333333333333"
 )
 
 var (
+	authService auth_service.AuthService
+
 	allUsers []user_model.User = []user_model.User{
 		{
 			UserId:          "Adam Min",
@@ -34,12 +45,23 @@ var (
 			AuthKey:         "Bob-Password",
 		},
 	}
-
-	default_user = &user_model.User{
+	adminUser = &user_model.User{
+		UserId:          "Adam Min",
+		TokensRemaining: 100,
+		IsAdmin:         true,
+		AuthKey:         "Super-Secret-Password",
+	}
+	defaultUser = &user_model.User{
 		UserId:          "Danny Default",
 		TokensRemaining: 1000,
 		IsAdmin:         false,
 		AuthKey:         "Danny-Password",
+	}
+	otherUser = &user_model.User{
+		UserId:          "Other Ollie",
+		TokensRemaining: 1000,
+		IsAdmin:         false,
+		AuthKey:         "Ollie-Password",
 	}
 )
 
@@ -53,11 +75,29 @@ func (m *MockUserRepository) Ping() error {
 	return nil
 }
 func (m *MockUserRepository) AllUsers() ([]user_model.User, error) {
-	// Note: this couples us to user_model.DefaultUsers
 	return allUsers, nil
 }
 func (m *MockUserRepository) User(id string) (*user_model.User, error) {
-	return default_user, nil
+	if id == adminIDString {
+		return adminUser, nil
+	} else if id == defaultIDString {
+		return defaultUser, nil
+	} else if id == otherIDString {
+		return otherUser, nil
+	}
+	return nil, errors.New("test")
+}
+
+func (m *MockUserRepository) UserByAuthHeader(auth string) (*user_model.User, error) {
+	if auth == "ADMIN" {
+		return adminUser, nil
+	} else if auth == "MISSING" {
+		return nil, &error_types.AuthUserNotFoundError{}
+	} else if auth == "" {
+		return nil, &error_types.NoAuthHeaderError{}
+	} else {
+		return defaultUser, nil
+	}
 }
 
 // AllErrorsMockUserRepository: Always returns an error
@@ -85,7 +125,24 @@ func (m *AllErrorsMockUserRepository) User(id string) (*user_model.User, error) 
 // Test utility functions
 func TestMain(m *testing.M) {
 	loggers.SilentInit()
+	setIdHexes()
+	authService = *auth_service.NewAuthService(&MockUserRepository{})
 	m.Run()
+}
+
+func setIdHexes() {
+	adminUser = setUserIdHex(adminUser, adminIDString)
+	defaultUser = setUserIdHex(defaultUser, defaultIDString)
+	otherUser = setUserIdHex(otherUser, otherIDString)
+	allUsers[0] = *setUserIdHex(&allUsers[0], adminIDString)
+	allUsers[1] = *setUserIdHex(&allUsers[1], defaultIDString)
+	allUsers[2] = *setUserIdHex(&allUsers[2], otherIDString)
+}
+
+func setUserIdHex(user *user_model.User, id string) *user_model.User {
+	hexId, _ := primitive.ObjectIDFromHex(id)
+	user.ID = hexId
+	return user
 }
 
 func testRouter(userService UserService) *gin.Engine {
@@ -93,12 +150,14 @@ func testRouter(userService UserService) *gin.Engine {
 	router.GET("/ping", userService.Ping)
 	router.POST("/users/reset", userService.ResetDb)
 	router.GET("/users/debug", userService.AllUsersDebug)
+	router.GET("/users", userService.AllUsers)
 	router.GET("/users/:id", userService.UserById)
 	return router
 }
 
-func performRequest(r http.Handler, method string, path string) *httptest.ResponseRecorder {
+func performRequest(r http.Handler, method string, path string, authHeader string) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
+	req.Header.Set("auth", authHeader)
 	recorder := httptest.NewRecorder()
 	r.ServeHTTP(recorder, req)
 	return recorder
@@ -108,9 +167,9 @@ func performRequest(r http.Handler, method string, path string) *httptest.Respon
 func TestResetDb_WithNoErrors_ReturnsNewIDsWithStatusOK(t *testing.T) {
 	expectedBody := []string{"1", "2", "3"}
 	mockRepo := &MockUserRepository{}
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "POST", "/users/reset")
+	recorder := performRequest(router, "POST", "/users/reset", "")
 
 	assert.Equal(t, http.StatusOK, recorder.Code)
 	var response []string
@@ -125,9 +184,9 @@ func TestResetDb_WithBadEnvError_RaisesBadRequest(t *testing.T) {
 
 	mockRepo := &AllErrorsMockUserRepository{}
 	mockRepo.setErr(returnedErr)
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "POST", "/users/reset")
+	recorder := performRequest(router, "POST", "/users/reset", "")
 	assert.Equal(t, http.StatusBadRequest, recorder.Code)
 
 	assert.Equal(t, expectedBody, recorder.Body.String())
@@ -139,9 +198,9 @@ func TestResetDb_WithOtherError_RaisesInternalServerError(t *testing.T) {
 
 	mockRepo := &AllErrorsMockUserRepository{}
 	mockRepo.setErr(returnedErr)
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "POST", "/users/reset")
+	recorder := performRequest(router, "POST", "/users/reset", "")
 
 	assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())
@@ -151,9 +210,9 @@ func TestPing_WithNoErrors_ReturnsStatusOK(t *testing.T) {
 	expectedBody := "\"Connection good\""
 
 	mockRepo := &MockUserRepository{}
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "GET", "/ping")
+	recorder := performRequest(router, "GET", "/ping", "")
 
 	assert.Equal(t, http.StatusOK, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())
@@ -165,19 +224,71 @@ func TestPing_WithError_RaisesInternalServerError(t *testing.T) {
 
 	mockRepo := &AllErrorsMockUserRepository{}
 	mockRepo.setErr(returnedErr)
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "GET", "/ping")
+	recorder := performRequest(router, "GET", "/ping", "")
 
 	assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())
 }
 
-func TestAllUsersDebug_WithNoErrors_ReturnsAllUsers(t *testing.T) {
+func TestAllUsers_WhenNoErrors_WhenAdmin_ReturnsUsers(t *testing.T) {
 	mockRepo := &MockUserRepository{}
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "GET", "/users/debug")
+	recorder := performRequest(router, "GET", "/users", "ADMIN")
+
+	var response []user_model.User
+	err := json.Unmarshal(recorder.Body.Bytes(), &response)
+	assert.Nil(t, err)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, allUsers, response)
+}
+
+func TestAllUsers_WhenErrors_RaisesInternalServerError(t *testing.T) {
+	returnedErr := errors.New("test")
+	expectedBody := "\"error getting users\""
+
+	mockRepo := &AllErrorsMockUserRepository{}
+	mockRepo.setErr(returnedErr)
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", "/users", "ADMIN")
+
+	assert.Equal(t, http.StatusInternalServerError, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestAllUsers_WhenNotAdmin_RaisesForbidden(t *testing.T) {
+	expectedBody := "\"forbidden\""
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", "/users", "DEFAULT")
+
+	assert.Equal(t, http.StatusForbidden, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestAllUsers_WhenAuthIsEmpty_RaisesUnauthorized(t *testing.T) {
+	expectedBody := "\"unauthorized\""
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", "/users", "")
+
+	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestAllUsersDebug_WithNoErrors_WithNoAuth_ReturnsAllUsers(t *testing.T) {
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", "/users/debug", "")
 
 	var response []user_model.User
 	err := json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -193,26 +304,73 @@ func TestAllUsersDebug_WithErrors_RaisesInternalServerError(t *testing.T) {
 
 	mockRepo := &AllErrorsMockUserRepository{}
 	mockRepo.setErr(returnedErr)
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "GET", "/users/debug")
+	recorder := performRequest(router, "GET", "/users/debug", "")
 
 	assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())
 }
 
-func TestUserByID_WithNoErrors_ReturnsUser(t *testing.T) {
+func TestUserByID_WhenAdminAsksForAUser_ReturnsUser(t *testing.T) {
 	mockRepo := &MockUserRepository{}
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "GET", "/users/660b281d060a0f748cf91f14")
+	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", defaultIDString), "ADMIN")
 
 	var response user_model.User
 	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, recorder.Code)
-	assert.Equal(t, default_user, &response)
+	assert.Equal(t, defaultUser, &response)
+}
+
+func TestUserByID_WhenAUserAsksForThemselves_ReturnsUser(t *testing.T) {
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", defaultIDString), "DEFAULT")
+
+	var response user_model.User
+	err := json.Unmarshal(recorder.Body.Bytes(), &response)
+	assert.Nil(t, err)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, defaultUser, &response)
+}
+
+func TestUserByID_WhenAUserAsksForAnotherUser_RaisesForbidden(t *testing.T) {
+	mockRepo := &MockUserRepository{}
+	expectedBody := "\"forbidden\""
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", otherIDString), "DEFAULT")
+
+	assert.Equal(t, http.StatusForbidden, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestUserByID_WhenAuthHeaderIsNotGiven_RaisesForbidden(t *testing.T) {
+	mockRepo := &MockUserRepository{}
+	expectedBody := "\"unauthorized\""
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", otherIDString), "")
+
+	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestUserByID_WhenAuthHeaderIsNotInDB_RaisesUnauthorized(t *testing.T) {
+	mockRepo := &MockUserRepository{}
+	expectedBody := "\"forbidden\""
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", otherIDString), "MISSING")
+
+	assert.Equal(t, http.StatusForbidden, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
 }
 
 func TestUserById_WhenUserIsNotFound_RaisesStatusNotFound(t *testing.T) {
@@ -221,9 +379,9 @@ func TestUserById_WhenUserIsNotFound_RaisesStatusNotFound(t *testing.T) {
 
 	mockRepo := &AllErrorsMockUserRepository{}
 	mockRepo.setErr(returnedErr)
-	service := NewUserService(mockRepo)
+	service := NewUserService(mockRepo, authService)
 	router := testRouter(*service)
-	recorder := performRequest(router, "GET", "/users/660b281d060a0f748cf91f14")
+	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", otherIDString), "ADMIN")
 
 	assert.Equal(t, http.StatusNotFound, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())

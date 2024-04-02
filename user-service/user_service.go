@@ -1,6 +1,7 @@
 package user_service
 
 import (
+	auth_service "maas/auth-service"
 	"maas/loggers"
 	"net/http"
 
@@ -19,11 +20,13 @@ type UserRepository interface {
 
 type UserService struct {
 	Repo UserRepository
+	Auth auth_service.AuthService
 }
 
-func NewUserService(repo UserRepository) *UserService {
+func NewUserService(repo UserRepository, auth auth_service.AuthService) *UserService {
 	return &UserService{
 		Repo: repo,
+		Auth: auth,
 	}
 }
 
@@ -73,6 +76,11 @@ func (s *UserService) AllUsersDebug(ginContext *gin.Context) {
 }
 
 func (s *UserService) UserById(ginContext *gin.Context) {
+	err := s.requireCallerOrAdmin(ginContext)
+	if err != nil {
+		return
+	}
+
 	user, err := s.Repo.User(ginContext.Param("id"))
 	if err != nil {
 		loggers.ErrorLog.Printf("Error getting user:\n%s", err.Error())
@@ -80,4 +88,68 @@ func (s *UserService) UserById(ginContext *gin.Context) {
 		return
 	}
 	ginContext.IndentedJSON(http.StatusOK, user)
+}
+
+// GETs all users, requires requesting user to be admin
+func (s *UserService) AllUsers(ginContext *gin.Context) {
+	err := s.requireAdmin(ginContext)
+	if err != nil {
+		return
+	}
+
+	users, err := s.Repo.AllUsers()
+	if err != nil {
+		loggers.ErrorLog.Printf("Error getting users:\n%s", err.Error())
+		ginContext.IndentedJSON(http.StatusInternalServerError, "error getting users")
+		return
+	}
+	ginContext.IndentedJSON(http.StatusOK, users)
+}
+
+// RequireAdmin
+func (s *UserService) requireAdmin(ginContext *gin.Context) error {
+	authHeader := ginContext.Request.Header.Get("auth")
+	isAdmin, err := s.Auth.IsAdmin(authHeader)
+	if err != nil {
+		authResponse(err, ginContext)
+		return err
+	}
+	if isAdmin {
+		return nil
+	}
+	err = &error_types.NotAdminError{}
+	authResponse(err, ginContext)
+	return err
+}
+
+func (s *UserService) requireCallerOrAdmin(ginContext *gin.Context) error {
+	authHeader := ginContext.Request.Header.Get("auth")
+	isAdmin, err := s.Auth.IsCallerOrAdmin(authHeader, ginContext.Param("id"))
+	if err != nil {
+		authResponse(err, ginContext)
+		return err
+	}
+	if isAdmin {
+		return nil
+	}
+	err = &error_types.NoAccessError{}
+	authResponse(err, ginContext)
+	return err
+}
+
+func authResponse(err error, ginContext *gin.Context) {
+	switch err.(type) {
+	default:
+		loggers.ErrorLog.Printf("Encountered an error during authentication: %s", err.Error())
+		ginContext.IndentedJSON(http.StatusForbidden, "forbidden")
+	case *error_types.NoAuthHeaderError:
+		loggers.ErrorLog.Print(err.Error())
+		ginContext.IndentedJSON(http.StatusUnauthorized, "unauthorized")
+	case *error_types.AuthUserNotFoundError:
+		loggers.ErrorLog.Print(err.Error())
+		ginContext.IndentedJSON(http.StatusForbidden, "forbidden")
+	case *error_types.NoAccessError:
+		loggers.ErrorLog.Print(err.Error())
+		ginContext.IndentedJSON(http.StatusForbidden, "forbidden")
+	}
 }

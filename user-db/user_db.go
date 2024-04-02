@@ -6,6 +6,7 @@ import (
 	"maas/loggers"
 	"os"
 
+	auth_service "maas/auth-service"
 	error_types "maas/error-types"
 	user_model "maas/user-model"
 	user_service "maas/user-service"
@@ -21,10 +22,32 @@ type MongoDBUserRepository struct {
 	ctx    *context.Context
 }
 
+// Normally I would say you probably don't want both of these to be the same, but since our auth
+// service is just checking a plaintext string and a bool in our db, I figured this works.
 var _ user_service.UserRepository = &MongoDBUserRepository{}
+var _ auth_service.AuthRepository = &MongoDBUserRepository{}
 
 func NewMongoDBUserRepository(client *mongo.Client, ctx *context.Context) *MongoDBUserRepository {
 	return &MongoDBUserRepository{client: client, ctx: ctx}
+}
+
+// UserByAuthHeader implements auth_service.AuthRepository.
+func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*user_model.User, error) {
+	database := m.client.Database("maas")
+	maas_users_collection := database.Collection("maas_users")
+
+	filter := bson.D{{Key: "auth_key", Value: auth}}
+
+	opts := options.FindOne()
+
+	var user user_model.User
+
+	err := maas_users_collection.FindOne(*m.ctx, filter, opts).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (m *MongoDBUserRepository) ResetDb() ([]interface{}, error) {
