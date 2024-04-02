@@ -47,3 +47,17 @@ type NoAccessError struct{}
 func (e *NoAccessError) Error() string {
 	return "User does not have access"
 }
+
+type AuthKeyAlreadyTakenError struct{}
+
+func (e *AuthKeyAlreadyTakenError) Error() string {
+	return "A user is already using that auth key"
+}
+
+type UnableToLocateDocumentError struct {
+	Err error
+}
+
+func (e *UnableToLocateDocumentError) Error() string {
+	return fmt.Sprintf("Unable to locate document:\n%s", e.Err.Error())
+}

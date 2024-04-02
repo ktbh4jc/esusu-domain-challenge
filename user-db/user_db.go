@@ -2,6 +2,7 @@ package user_db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maas/loggers"
 	meme_service "maas/meme-service"
@@ -33,7 +34,17 @@ func NewMongoDBUserRepository(client *mongo.Client, ctx *context.Context) *Mongo
 	return &MongoDBUserRepository{client: client, ctx: ctx}
 }
 
-// UserByAuthHeader implements auth_service.AuthRepository.
+func (m *MongoDBUserRepository) NewUser(user models.User) (interface{}, error) {
+	database := m.client.Database("maas")
+	maas_users_collection := database.Collection("maas_users")
+
+	insertResult, err := maas_users_collection.InsertOne(*m.ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return insertResult.InsertedID, nil
+}
+
 func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*models.User, error) {
 	database := m.client.Database("maas")
 	maas_users_collection := database.Collection("maas_users")
@@ -46,6 +57,10 @@ func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*models.User, err
 
 	err := maas_users_collection.FindOne(*m.ctx, filter, opts).Decode(&user)
 	if err != nil {
+		// I want to avoid using mongo-specific errors up the chain
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, &error_types.UnableToLocateDocumentError{Err: err}
+		}
 		return nil, err
 	}
 

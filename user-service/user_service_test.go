@@ -95,9 +95,15 @@ func (m *MockUserRepository) UserByAuthHeader(auth string) (*models.User, error)
 		return nil, &error_types.AuthUserNotFoundError{}
 	} else if auth == "" {
 		return nil, &error_types.NoAuthHeaderError{}
+	} else if auth == "AVAILABLE" {
+		return nil, &error_types.UnableToLocateDocumentError{}
 	} else {
 		return defaultUser, nil
 	}
+}
+
+func (m *MockUserRepository) NewUser(user models.User) (interface{}, error) {
+	return "1", nil
 }
 
 // AllErrorsMockUserRepository: Always returns an error
@@ -120,6 +126,9 @@ func (m *AllErrorsMockUserRepository) AllUsers() ([]models.User, error) {
 }
 func (m *AllErrorsMockUserRepository) User(id string) (*models.User, error) {
 	return nil, errors.New("test")
+}
+func (m *AllErrorsMockUserRepository) NewUser(user models.User) (interface{}, error) {
+	panic("Working on it")
 }
 
 // Test utility functions
@@ -151,6 +160,7 @@ func testRouter(userService UserService) *gin.Engine {
 	router.POST("/users/reset", userService.ResetDb)
 	router.GET("/users/debug", userService.AllUsersDebug)
 	router.GET("/users", userService.AllUsers)
+	router.POST("/users", userService.NewUser)
 	router.GET("/users/:id", userService.UserById)
 	return router
 }
@@ -158,6 +168,31 @@ func testRouter(userService UserService) *gin.Engine {
 func performRequest(r http.Handler, method string, path string, authHeader string) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
 	req.Header.Set("auth", authHeader)
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+	return recorder
+}
+
+func performRequestWithForm(r http.Handler, method string, path string, authHeader string, form map[string]string) *httptest.ResponseRecorder {
+	// buf := new(bytes.Buffer)
+	// w := multipart.NewWriter(buf)
+	// userName, _ := w.CreateFormField("user_id")
+	// userName.Write([]byte("Test name"))
+	// tokensRemaining, _ := w.CreateFormField("tokens_remaining")
+	// tokensRemaining.Write([]byte("123"))
+	// authKey, _ := w.CreateFormField("auth_key")
+	// authKey.Write([]byte("Test auth_key"))
+	// isAdmin, _ := w.CreateFormField("is_admin")
+	// isAdmin.Write([]byte("false"))
+
+	req, _ := http.NewRequest(method, path, nil)
+
+	req.Header.Set("auth", authHeader)
+	req.ParseForm()
+	for key, value := range form {
+		req.PostForm.Set(key, value)
+	}
+	// req.Form.Add("user_id", "Test ID")
 	recorder := httptest.NewRecorder()
 	r.ServeHTTP(recorder, req)
 	return recorder
@@ -384,5 +419,63 @@ func TestUserById_WhenUserIsNotFound_RaisesStatusNotFound(t *testing.T) {
 	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", otherIDString), "ADMIN")
 
 	assert.Equal(t, http.StatusNotFound, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+// There are a few more test cases, but I think this gets us close enough for a takehome.
+func TestAddUser_WhenAdminCreatesGoodUser_CreatesUser(t *testing.T) {
+	expectedBody := "\"1\""
+
+	var newUser map[string]string = map[string]string{
+		"user_id":          "test_user_id",
+		"auth_key":         "AVAILABLE",
+		"is_admin":         "false",
+		"tokens_remaining": "10",
+	}
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequestWithForm(router, "POST", "/users", "ADMIN", newUser)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestAddUser_WhenAdminReusesAuthKey_RaisesError(t *testing.T) {
+	expectedBody := fmt.Sprintf("\"User %s is already using that auth header\"", defaultIDString)
+
+	var newUser map[string]string = map[string]string{
+		"user_id":          "test_user_id",
+		"auth_key":         "DEFAULT",
+		"is_admin":         "false",
+		"tokens_remaining": "10",
+	}
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequestWithForm(router, "POST", "/users", "ADMIN", newUser)
+
+	assert.Equal(t, http.StatusBadRequest, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestAddUser_WhenNonAdminCreatesUser_RaisesError(t *testing.T) {
+	expectedBody := "\"forbidden\""
+
+	var newUser map[string]string = map[string]string{
+		"user_id":          "test_user_id",
+		"auth_key":         "AVAILABLE",
+		"is_admin":         "false",
+		"tokens_remaining": "10",
+	}
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequestWithForm(router, "POST", "/users", "DEFAULT", newUser)
+
+	assert.Equal(t, http.StatusForbidden, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())
 }

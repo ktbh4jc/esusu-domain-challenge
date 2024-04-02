@@ -101,7 +101,7 @@ UPDATE, I got an email back. Response is below. Anything on a new line following
 > I followed up since I have already been using a cloud instance of MongoDB and Mark said that should be fine. For test purposes, I have connected to my MongoDB instance from another computer. 
 
 ## Process
-I'm going to be using git to track my code. My plan is to have everything set up in such a way that each "ticket" defined below will be done in a separate local branch and then squashed and merged into master after they are implemented. Each ticket will also include a note determining if it is a need, a want, or a nice-to-have. Needs are explicitly called out as necessary. Wants are things that I really want to put in, but will be dependant on time. Nice to haves are things I would add given time but don't necessarily expect to get done in the 72 hour timeline. 
+I'm going to be using git to track my code. My plan is to have everything set up in such a way that each "ticket" defined in tickets.md will be done in a separate local branch and then squashed and merged into master after they are implemented. Each ticket will also include a note determining if it is a need, a want, or a nice-to-have. Needs are explicitly called out as necessary. Wants are things that I really want to put in, but will be dependant on time. Nice to haves are things I would add given time but don't necessarily expect to get done in the 72 hour timeline. 
 
 Tickets will be formatted as such MAAS-[Question Number][SubStep Number with 2 digits]  
 Ex: MAAS-101 would be the first ticket for question 1.

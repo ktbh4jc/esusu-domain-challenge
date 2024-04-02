@@ -1,9 +1,13 @@
 package user_service
 
 import (
+	// "encoding/json"
+
+	"fmt"
 	auth_service "maas/auth-service"
 	"maas/loggers"
 	"net/http"
+	"strconv"
 
 	error_types "maas/error-types"
 	"maas/models"
@@ -16,6 +20,7 @@ type UserRepository interface {
 	Ping() error
 	AllUsers() ([]models.User, error)
 	User(id string) (*models.User, error)
+	NewUser(user models.User) (interface{}, error)
 }
 
 type UserService struct {
@@ -75,6 +80,7 @@ func (s *UserService) AllUsersDebug(ginContext *gin.Context) {
 	ginContext.IndentedJSON(http.StatusOK, users)
 }
 
+// GETs a user by ID. Needs to be either the requesting user getting their own info or an admin
 func (s *UserService) UserById(ginContext *gin.Context) {
 	err := s.requireCallerOrAdmin(ginContext)
 	if err != nil {
@@ -104,6 +110,74 @@ func (s *UserService) AllUsers(ginContext *gin.Context) {
 		return
 	}
 	ginContext.IndentedJSON(http.StatusOK, users)
+}
+
+// POST for a new user. Only an admin can create a new user.
+func (s *UserService) NewUser(ginContext *gin.Context) {
+	err := s.requireAdmin(ginContext)
+	if err != nil {
+		return
+	}
+
+	user, err := s.userFromGinContext(ginContext)
+	if err != nil {
+		// error responses set in userFromGinContext
+		return
+	}
+	err = s.ensureAuthKeyIsNew(*user, ginContext)
+	if err != nil {
+		// error responses set in ensureAuthKeyIsNew
+		return
+	}
+
+	result, err := s.Repo.NewUser(*user)
+	if err != nil {
+		loggers.ErrorLog.Printf("Error encountered creating user: %s", err)
+		ginContext.IndentedJSON(http.StatusBadRequest, "Encountered error creating new user")
+		return
+	}
+	ginContext.IndentedJSON(http.StatusOK, result)
+}
+
+func (s *UserService) userFromGinContext(ginContext *gin.Context) (*models.User, error) {
+	// loggers.ErrorLog.Printf("tokens_remaining: %s\nis_admin:%s")
+
+	tokens, err := strconv.Atoi(ginContext.PostForm("tokens_remaining"))
+	if err != nil {
+		loggers.ErrorLog.Printf("Error encountered creating user: %s", err)
+		ginContext.IndentedJSON(http.StatusBadRequest, "tokens_remaining must be an int")
+		return nil, err
+	}
+	isAdmin, err := strconv.ParseBool(ginContext.PostForm("is_admin"))
+	if err != nil {
+		loggers.ErrorLog.Printf("Error encountered creating user: %s", err)
+		ginContext.IndentedJSON(http.StatusBadRequest, "is_admin must be an bool")
+		return nil, err
+	}
+
+	user := &models.User{
+		UserId:          ginContext.PostForm("user_id"),
+		TokensRemaining: tokens,
+		AuthKey:         ginContext.PostForm("auth_key"),
+		IsAdmin:         isAdmin,
+	}
+	return user, nil
+}
+
+func (s *UserService) ensureAuthKeyIsNew(user models.User, ginContext *gin.Context) error {
+	userResult, err := s.Auth.Repo.UserByAuthHeader(user.AuthKey)
+	if err != nil {
+		switch err.(type) {
+		default:
+			ginContext.IndentedJSON(http.StatusInternalServerError, "issue confirming provided auth header is unused")
+			return err
+		case *error_types.UnableToLocateDocumentError:
+			return nil
+		}
+	}
+	// Always fun to have an excuse for an error message that you would never want to use IRL
+	ginContext.IndentedJSON(http.StatusBadRequest, fmt.Sprintf("User %s is already using that auth header", userResult.ID.Hex()))
+	return &error_types.AuthKeyAlreadyTakenError{}
 }
 
 // RequireAdmin

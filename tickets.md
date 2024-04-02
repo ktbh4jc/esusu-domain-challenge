@@ -80,21 +80,31 @@
    -  Bob meme request ![Bob meme request](./screen-shots/204c.png)
    -  Relevant users after, notice that Alice has lost a token. ![Relevant users after](./screen-shots/204d.png)
 
-- [ ] MAAS-206: Create POST /users endpoint - NEED
+- [x] MAAS-206: Create POST /users endpoint - NEED
   - admins can create new users
   - non-admins get unauthorized
   - requests without auth header get unauthenticated 
   - A post containing an existing user id will give a 400 bad input with a "auth key already taken" response, because this is the only time I could really have that response and that's funny to me. 
+  - Admin making new user ![Admin new user](./screen-shots/206a.png)
+  - The created user in mongoDB ![new user in mongo](./screen-shots/206b.png)
+  - Unable to make another user with the same auth key ![user already using that auth](./screen-shots/206c.png)
+
+
 - [ ] MAAS-207: Create PATCH /users/[UserId]
   - admins can update existing users
   - non-admins get unauthorized 
   - requests without auth header get unauthenticated 
 - [ ] MAAS-300: Write up scalability plans - NEED
   - At least some of it will be hosting on AWS in lambdas, but the exact breakdown will come later. 
-- [ ] MAAS-301+: See if I can implement some of my 300 plan. 
 - [ ] MAAS-400: Write up AI plans - NEED
 - [ ] MAAS-002: Re-read the code, self PR. 
+- [ ] MAAS-003: Add postman collection
+  - [docs](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-and-exporting-overview/)
 
+  
 
+### Anything below is a ticket I would consider for a larger project or with more time
 - [ ] MAAS-103: Build out some form of image generation - WANT
   - Vague at the moment because I need to get the NEEDS done before I get distracted into the WANTs
+- [ ] MAAS-301+: See if I can implement some of my 300 plan.
+- [ ] MAAS-500: Standardize and centralize my mocks so there is less copy/pasting

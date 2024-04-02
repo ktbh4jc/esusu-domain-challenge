@@ -4,16 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	// "net/http"
 	"os"
 
 	auth_service "maas/auth-service"
 	"maas/loggers"
 	meme_maker "maas/meme-maker"
 	meme_service "maas/meme-service"
-
-	// meme_maker "maas/meme-maker"
-	// meme_service "maas/meme-service"
 	user_db "maas/user-db"
 	user_service "maas/user-service"
 
@@ -62,6 +58,7 @@ func setupRouter(userService *user_service.UserService, memeService *meme_servic
 	router.POST("/users/reset", userService.ResetDb)
 	router.GET("/users/debug", userService.AllUsersDebug)
 	router.GET("/users", userService.AllUsers)
+	router.POST("/users", userService.NewUser)
 	router.GET("/users/:id", userService.UserById)
 	return router
 }
