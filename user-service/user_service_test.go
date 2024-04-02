@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	error_types "maas/error-types"
-	user_model "maas/user-model"
+	"maas/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ const (
 var (
 	authService auth_service.AuthService
 
-	allUsers []user_model.User = []user_model.User{
+	allUsers []models.User = []models.User{
 		{
 			UserId:          "Adam Min",
 			TokensRemaining: 100,
@@ -45,19 +45,19 @@ var (
 			AuthKey:         "Bob-Password",
 		},
 	}
-	adminUser = &user_model.User{
+	adminUser = &models.User{
 		UserId:          "Adam Min",
 		TokensRemaining: 100,
 		IsAdmin:         true,
 		AuthKey:         "Super-Secret-Password",
 	}
-	defaultUser = &user_model.User{
+	defaultUser = &models.User{
 		UserId:          "Danny Default",
 		TokensRemaining: 1000,
 		IsAdmin:         false,
 		AuthKey:         "Danny-Password",
 	}
-	otherUser = &user_model.User{
+	otherUser = &models.User{
 		UserId:          "Other Ollie",
 		TokensRemaining: 1000,
 		IsAdmin:         false,
@@ -74,10 +74,10 @@ func (m *MockUserRepository) ResetDb() ([]interface{}, error) {
 func (m *MockUserRepository) Ping() error {
 	return nil
 }
-func (m *MockUserRepository) AllUsers() ([]user_model.User, error) {
+func (m *MockUserRepository) AllUsers() ([]models.User, error) {
 	return allUsers, nil
 }
-func (m *MockUserRepository) User(id string) (*user_model.User, error) {
+func (m *MockUserRepository) User(id string) (*models.User, error) {
 	if id == adminIDString {
 		return adminUser, nil
 	} else if id == defaultIDString {
@@ -88,7 +88,7 @@ func (m *MockUserRepository) User(id string) (*user_model.User, error) {
 	return nil, errors.New("test")
 }
 
-func (m *MockUserRepository) UserByAuthHeader(auth string) (*user_model.User, error) {
+func (m *MockUserRepository) UserByAuthHeader(auth string) (*models.User, error) {
 	if auth == "ADMIN" {
 		return adminUser, nil
 	} else if auth == "MISSING" {
@@ -115,10 +115,10 @@ func (m *AllErrorsMockUserRepository) ResetDb() ([]interface{}, error) {
 func (m *AllErrorsMockUserRepository) Ping() error {
 	return &error_types.MongoConnectionError{Err: errors.New("test")}
 }
-func (m *AllErrorsMockUserRepository) AllUsers() ([]user_model.User, error) {
-	return []user_model.User{}, errors.New("test")
+func (m *AllErrorsMockUserRepository) AllUsers() ([]models.User, error) {
+	return []models.User{}, errors.New("test")
 }
-func (m *AllErrorsMockUserRepository) User(id string) (*user_model.User, error) {
+func (m *AllErrorsMockUserRepository) User(id string) (*models.User, error) {
 	return nil, errors.New("test")
 }
 
@@ -139,7 +139,7 @@ func setIdHexes() {
 	allUsers[2] = *setUserIdHex(&allUsers[2], otherIDString)
 }
 
-func setUserIdHex(user *user_model.User, id string) *user_model.User {
+func setUserIdHex(user *models.User, id string) *models.User {
 	hexId, _ := primitive.ObjectIDFromHex(id)
 	user.ID = hexId
 	return user
@@ -238,7 +238,7 @@ func TestAllUsers_WhenNoErrors_WhenAdmin_ReturnsUsers(t *testing.T) {
 	router := testRouter(*service)
 	recorder := performRequest(router, "GET", "/users", "ADMIN")
 
-	var response []user_model.User
+	var response []models.User
 	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Nil(t, err)
 
@@ -290,7 +290,7 @@ func TestAllUsersDebug_WithNoErrors_WithNoAuth_ReturnsAllUsers(t *testing.T) {
 	router := testRouter(*service)
 	recorder := performRequest(router, "GET", "/users/debug", "")
 
-	var response []user_model.User
+	var response []models.User
 	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Nil(t, err)
 
@@ -318,7 +318,7 @@ func TestUserByID_WhenAdminAsksForAUser_ReturnsUser(t *testing.T) {
 	router := testRouter(*service)
 	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", defaultIDString), "ADMIN")
 
-	var response user_model.User
+	var response models.User
 	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Nil(t, err)
 
@@ -332,7 +332,7 @@ func TestUserByID_WhenAUserAsksForThemselves_ReturnsUser(t *testing.T) {
 	router := testRouter(*service)
 	recorder := performRequest(router, "GET", fmt.Sprintf("/users/%s", defaultIDString), "DEFAULT")
 
-	var response user_model.User
+	var response models.User
 	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Nil(t, err)
 

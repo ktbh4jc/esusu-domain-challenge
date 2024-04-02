@@ -2,11 +2,11 @@ package auth_service
 
 import (
 	error_types "maas/error-types"
-	user_model "maas/user-model"
+	"maas/models"
 )
 
 type AuthRepository interface {
-	UserByAuthHeader(auth string) (*user_model.User, error)
+	UserByAuthHeader(auth string) (*models.User, error)
 }
 
 type AuthService struct {

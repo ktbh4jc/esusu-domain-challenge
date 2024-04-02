@@ -2,7 +2,7 @@ package auth_service
 
 import (
 	error_types "maas/error-types"
-	user_model "maas/user-model"
+	"maas/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,13 +17,13 @@ const (
 var (
 	authService AuthService
 
-	adminUser = &user_model.User{
+	adminUser = &models.User{
 		UserId:          "Adam Min",
 		TokensRemaining: 100,
 		IsAdmin:         true,
 		AuthKey:         "Super-Secret-Password",
 	}
-	defaultUser = &user_model.User{
+	defaultUser = &models.User{
 		UserId:          "Danny Default",
 		TokensRemaining: 1000,
 		IsAdmin:         false,
@@ -33,7 +33,7 @@ var (
 
 type MockUserRepository struct{}
 
-func (m *MockUserRepository) UserByAuthHeader(auth string) (*user_model.User, error) {
+func (m *MockUserRepository) UserByAuthHeader(auth string) (*models.User, error) {
 	if auth == "ADMIN" {
 		return adminUser, nil
 	} else if auth == "MISSING" {
@@ -45,7 +45,7 @@ func (m *MockUserRepository) UserByAuthHeader(auth string) (*user_model.User, er
 	}
 }
 
-func setUserIdHex(user *user_model.User, id string) *user_model.User {
+func setUserIdHex(user *models.User, id string) *models.User {
 	hexId, _ := primitive.ObjectIDFromHex(id)
 	user.ID = hexId
 	return user

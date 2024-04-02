@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"maas/loggers"
+	meme_service "maas/meme-service"
 	"os"
 
 	auth_service "maas/auth-service"
 	error_types "maas/error-types"
-	user_model "maas/user-model"
+	"maas/models"
 	user_service "maas/user-service"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -26,13 +27,14 @@ type MongoDBUserRepository struct {
 // service is just checking a plaintext string and a bool in our db, I figured this works.
 var _ user_service.UserRepository = &MongoDBUserRepository{}
 var _ auth_service.AuthRepository = &MongoDBUserRepository{}
+var _ meme_service.UserRepository = &MongoDBUserRepository{}
 
 func NewMongoDBUserRepository(client *mongo.Client, ctx *context.Context) *MongoDBUserRepository {
 	return &MongoDBUserRepository{client: client, ctx: ctx}
 }
 
 // UserByAuthHeader implements auth_service.AuthRepository.
-func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*user_model.User, error) {
+func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*models.User, error) {
 	database := m.client.Database("maas")
 	maas_users_collection := database.Collection("maas_users")
 
@@ -40,7 +42,7 @@ func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*user_model.User,
 
 	opts := options.FindOne()
 
-	var user user_model.User
+	var user models.User
 
 	err := maas_users_collection.FindOne(*m.ctx, filter, opts).Decode(&user)
 	if err != nil {
@@ -48,6 +50,24 @@ func (m *MongoDBUserRepository) UserByAuthHeader(auth string) (*user_model.User,
 	}
 
 	return &user, nil
+}
+
+func (m *MongoDBUserRepository) UpdateUser(id string, user *models.User) error {
+	database := m.client.Database("maas")
+	maas_users_collection := database.Collection("maas_users")
+	hexId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = maas_users_collection.ReplaceOne(
+		*m.ctx,
+		bson.M{"_id": hexId},
+		user,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *MongoDBUserRepository) ResetDb() ([]interface{}, error) {
@@ -68,7 +88,7 @@ func (m *MongoDBUserRepository) ResetDb() ([]interface{}, error) {
 	}
 
 	// Insert new data
-	insertResult, err := maas_users.InsertMany(*m.ctx, user_model.DefaultUsers)
+	insertResult, err := maas_users.InsertMany(*m.ctx, models.DefaultUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +97,7 @@ func (m *MongoDBUserRepository) ResetDb() ([]interface{}, error) {
 	return insertResult.InsertedIDs, nil
 }
 
-func (m *MongoDBUserRepository) User(id string) (*user_model.User, error) {
+func (m *MongoDBUserRepository) User(id string) (*models.User, error) {
 	database := m.client.Database("maas")
 	maas_users_collection := database.Collection("maas_users")
 	objectId, err := primitive.ObjectIDFromHex(id)
@@ -89,7 +109,7 @@ func (m *MongoDBUserRepository) User(id string) (*user_model.User, error) {
 
 	opts := options.FindOne()
 
-	var user user_model.User
+	var user models.User
 
 	err = maas_users_collection.FindOne(*m.ctx, filter, opts).Decode(&user)
 	if err != nil {
@@ -99,7 +119,7 @@ func (m *MongoDBUserRepository) User(id string) (*user_model.User, error) {
 	return &user, nil
 }
 
-func (m *MongoDBUserRepository) AllUsers() ([]user_model.User, error) {
+func (m *MongoDBUserRepository) AllUsers() ([]models.User, error) {
 	database := m.client.Database("maas")
 	maas_users_collection := database.Collection("maas_users")
 
@@ -108,7 +128,7 @@ func (m *MongoDBUserRepository) AllUsers() ([]user_model.User, error) {
 		return nil, err
 	}
 
-	var users_output []user_model.User
+	var users_output []models.User
 
 	if err := cursor.All(*m.ctx, &users_output); err != nil {
 		return nil, err
@@ -117,7 +137,6 @@ func (m *MongoDBUserRepository) AllUsers() ([]user_model.User, error) {
 	return users_output, nil
 }
 
-// Ping implements user_service.UserRepository.Ping
 func (m *MongoDBUserRepository) Ping() error {
 	if err := m.client.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		return &error_types.MongoConnectionError{Err: err}

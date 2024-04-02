@@ -2,49 +2,23 @@ package meme_maker
 
 import (
 	"fmt"
-	query_params "maas/query-params"
+	meme_service "maas/meme-service"
+	"maas/models"
 )
 
-type Meme struct {
-	TopText       string `json:"top_text"`
-	BottomText    string `json:"bottom_text"`
-	ImageLocation string `json:"image_location"`
+type MemeMaker struct{}
+
+func (m *MemeMaker) NewMeme() *models.Meme {
+	return &models.Meme{TopText: "Up Top", BottomText: "Bottom Text", ImageLocation: "Nowhere and everywhere"}
 }
 
-func NewMeme() *Meme {
-	return &Meme{TopText: "Up Top", BottomText: "Bottom Text", ImageLocation: "Nowhere and everywhere"}
-}
-
-func (m *Meme) withTopText(topText string) *Meme {
-	m.TopText = topText
-	return m
-}
-
-func (m *Meme) withBottomText(bottomText string) *Meme {
-	m.BottomText = bottomText
-	return m
-}
-
-func (m *Meme) withImageLocation(imageLocation string) *Meme {
-	m.ImageLocation = imageLocation
-	return m
-}
-
-func BuildMeme(query *query_params.QueryParams) *Meme {
-	meme := NewMeme()
+func (m *MemeMaker) BuildMeme(query *meme_service.QueryParams) (*models.Meme, error) {
+	meme := m.NewMeme()
 	if query.Query != "" {
-		meme = meme.withTopText(query.Query)
+		meme = meme.WithTopText(query.Query)
 	}
 	if query.Lat != 0 && query.Lon != 0 {
-		meme = meme.withImageLocation(fmt.Sprintf("%.6f x %.6f", query.Lat, query.Lon))
+		meme = meme.WithImageLocation(fmt.Sprintf("%.6f x %.6f", query.Lat, query.Lon))
 	}
-	return meme
-}
-
-func (m *Meme) MakeMap() map[string]string {
-	return map[string]string{
-		"top_text":       m.TopText,
-		"bottom_text":    m.BottomText,
-		"image_location": m.ImageLocation,
-	}
+	return meme, nil
 }

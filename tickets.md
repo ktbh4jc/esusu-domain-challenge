@@ -72,9 +72,13 @@
   ![get all users admin](./screen-shots/205e.png)
   ![fail to get all users as non admin](./screen-shots/205f.png)
 
-- [ ] MAAS-204: Update GET /memes to take users into consideration - NEED
+- [x] MAAS-204: Update GET /memes to take users into consideration - NEED
    -  When a user with no tokens left requests a meme, return a 400
    -  When a user with tokens requests a meme, reduce the token count by 1 and return a meme
+   -  Relevant Users Before ![Relevant Users Before](./screen-shots/204a.png)
+   -  Alice meme request ![Alice meme request](./screen-shots/204b.png)
+   -  Bob meme request ![Bob meme request](./screen-shots/204c.png)
+   -  Relevant users after, notice that Alice has lost a token. ![Relevant users after](./screen-shots/204d.png)
 
 - [ ] MAAS-206: Create POST /users endpoint - NEED
   - admins can create new users

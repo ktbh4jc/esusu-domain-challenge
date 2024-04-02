@@ -1,4 +1,4 @@
-package user_model
+package models
 
 var DefaultUsers []interface{} = []interface{}{
 	User{

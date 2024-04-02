@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
+
+	// "net/http"
 	"os"
 
 	auth_service "maas/auth-service"
 	"maas/loggers"
 	meme_maker "maas/meme-maker"
-	query_params "maas/query-params"
+	meme_service "maas/meme-service"
+
+	// meme_maker "maas/meme-maker"
+	// meme_service "maas/meme-service"
 	user_db "maas/user-db"
 	user_service "maas/user-service"
 
@@ -19,19 +23,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func getMeme(ctx *gin.Context) {
-	queryParams, err := query_params.ExtractParams(ctx)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
-		return
-	}
-	ctx.IndentedJSON(http.StatusOK, meme_maker.BuildMeme(queryParams))
-}
-
-func setupUserService(client *mongo.Client, ctx *context.Context) *user_service.UserService {
+func setupAuthAndUserServices(client *mongo.Client, ctx *context.Context) (*user_service.UserService, *auth_service.AuthService) {
 	mongoUserDb := user_db.NewMongoDBUserRepository(client, ctx)
 	authService := auth_service.NewAuthService(mongoUserDb)
-	return user_service.NewUserService(mongoUserDb, *authService)
+	return user_service.NewUserService(mongoUserDb, *authService), *&authService
 }
 
 func connect(ctx context.Context) (*mongo.Client, error) {
@@ -60,9 +55,9 @@ func connect(ctx context.Context) (*mongo.Client, error) {
 	return client, nil
 }
 
-func setupRouter(userService *user_service.UserService) *gin.Engine {
+func setupRouter(userService *user_service.UserService, memeService *meme_service.MemeService) *gin.Engine {
 	router := gin.Default()
-	router.GET("/memes", getMeme)
+	router.GET("/memes", memeService.GetMeme)
 	router.GET("/mongo", userService.Ping)
 	router.POST("/users/reset", userService.ResetDb)
 	router.GET("/users/debug", userService.AllUsersDebug)
@@ -90,8 +85,11 @@ func main() {
 		}
 	}()
 
-	userService := setupUserService(client, &ctx)
-	router := setupRouter(userService)
+	mongoUserDb := user_db.NewMongoDBUserRepository(client, &ctx)
+	authService := auth_service.NewAuthService(mongoUserDb)
+	userService := user_service.NewUserService(mongoUserDb, *authService)
+	memeService := meme_service.NewMemeService(mongoUserDb, *authService, &meme_maker.MemeMaker{})
+	router := setupRouter(userService, memeService)
 
 	rootURL := os.Getenv("ROOT_URL")
 	router.Run(rootURL)

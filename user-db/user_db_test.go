@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"maas/models"
 	user_db "maas/user-db"
-	user_model "maas/user-model"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/strikesecurity/strikememongo"
@@ -98,7 +98,7 @@ func cleanup() {
 }
 
 func loadDefaultData() {
-	usersCollection.InsertMany(ctx, user_model.DefaultUsers)
+	usersCollection.InsertMany(ctx, models.DefaultUsers)
 }
 
 /*

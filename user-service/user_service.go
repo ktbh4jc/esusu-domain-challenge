@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	error_types "maas/error-types"
-	user_model "maas/user-model"
+	"maas/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,8 +14,8 @@ import (
 type UserRepository interface {
 	ResetDb() ([]interface{}, error)
 	Ping() error
-	AllUsers() ([]user_model.User, error)
-	User(id string) (*user_model.User, error)
+	AllUsers() ([]models.User, error)
+	User(id string) (*models.User, error)
 }
 
 type UserService struct {
