@@ -106,6 +106,8 @@ func (m *MockUserRepository) NewUser(user models.User) (interface{}, error) {
 	return "1", nil
 }
 
+func (m *MockUserRepository) UpdateUser(id string, user *models.User) error { return nil }
+
 // AllErrorsMockUserRepository: Always returns an error
 type AllErrorsMockUserRepository struct {
 	err error
@@ -130,6 +132,8 @@ func (m *AllErrorsMockUserRepository) User(id string) (*models.User, error) {
 func (m *AllErrorsMockUserRepository) NewUser(user models.User) (interface{}, error) {
 	panic("Working on it")
 }
+
+func (m *AllErrorsMockUserRepository) UpdateUser(id string, user *models.User) error { return m.err }
 
 // Test utility functions
 func TestMain(m *testing.M) {
@@ -162,6 +166,7 @@ func testRouter(userService UserService) *gin.Engine {
 	router.GET("/users", userService.AllUsers)
 	router.POST("/users", userService.NewUser)
 	router.GET("/users/:id", userService.UserById)
+	router.PATCH("/users/:id", userService.UpdateUser)
 	return router
 }
 
@@ -477,5 +482,62 @@ func TestAddUser_WhenNonAdminCreatesUser_RaisesError(t *testing.T) {
 	recorder := performRequestWithForm(router, "POST", "/users", "DEFAULT", newUser)
 
 	assert.Equal(t, http.StatusForbidden, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestUpdateUser_WhenAdminMakesGoodRequest_ReturnsStatusOK(t *testing.T) {
+	expectedBody := "\"successfully updated user\""
+
+	var newUser map[string]string = map[string]string{
+		"user_id":          "test_user_id",
+		"auth_key":         "DEFAULT",
+		"is_admin":         "false",
+		"tokens_remaining": "10",
+	}
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequestWithForm(router, "PATCH", fmt.Sprintf("/users/%s", defaultIDString), "ADMIN", newUser)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestUpdateUser_WhenNonAdminMakeRequest_RaisesForbidden(t *testing.T) {
+	expectedBody := "\"forbidden\""
+
+	var newUser map[string]string = map[string]string{
+		"user_id":          "test_user_id",
+		"auth_key":         "DEFAULT",
+		"is_admin":         "false",
+		"tokens_remaining": "10",
+	}
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequestWithForm(router, "PATCH", fmt.Sprintf("/users/%s", defaultIDString), "DEFAULT", newUser)
+
+	assert.Equal(t, http.StatusForbidden, recorder.Code)
+	assert.Equal(t, expectedBody, recorder.Body.String())
+}
+
+func TestUpdateUser_WhenUserIdNotInDB_RaisesNotFound(t *testing.T) {
+	expectedBody := "\"Unable to find that user\""
+
+	var newUser map[string]string = map[string]string{
+		"user_id":          "test_user_id",
+		"auth_key":         "DEFAULT",
+		"is_admin":         "false",
+		"tokens_remaining": "10",
+	}
+
+	mockRepo := &MockUserRepository{}
+	service := NewUserService(mockRepo, authService)
+	router := testRouter(*service)
+	recorder := performRequestWithForm(router, "PATCH", "/users/BAD", "ADMIN", newUser)
+
+	assert.Equal(t, http.StatusNotFound, recorder.Code)
 	assert.Equal(t, expectedBody, recorder.Body.String())
 }

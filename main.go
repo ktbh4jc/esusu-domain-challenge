@@ -19,12 +19,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func setupAuthAndUserServices(client *mongo.Client, ctx *context.Context) (*user_service.UserService, *auth_service.AuthService) {
-	mongoUserDb := user_db.NewMongoDBUserRepository(client, ctx)
-	authService := auth_service.NewAuthService(mongoUserDb)
-	return user_service.NewUserService(mongoUserDb, *authService), *&authService
-}
-
 func connect(ctx context.Context) (*mongo.Client, error) {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	mongoUriTemplate := os.Getenv("MONGO_URI_TEMPLATE")
@@ -60,6 +54,7 @@ func setupRouter(userService *user_service.UserService, memeService *meme_servic
 	router.GET("/users", userService.AllUsers)
 	router.POST("/users", userService.NewUser)
 	router.GET("/users/:id", userService.UserById)
+	router.PATCH("/users/:id", userService.UpdateUser)
 	return router
 }
 

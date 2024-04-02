@@ -21,6 +21,7 @@ type UserRepository interface {
 	AllUsers() ([]models.User, error)
 	User(id string) (*models.User, error)
 	NewUser(user models.User) (interface{}, error)
+	UpdateUser(id string, user *models.User) error
 }
 
 type UserService struct {
@@ -139,9 +140,39 @@ func (s *UserService) NewUser(ginContext *gin.Context) {
 	ginContext.IndentedJSON(http.StatusOK, result)
 }
 
-func (s *UserService) userFromGinContext(ginContext *gin.Context) (*models.User, error) {
-	// loggers.ErrorLog.Printf("tokens_remaining: %s\nis_admin:%s")
+// PATCH an existing user. Only an admin can do this.
+func (s *UserService) UpdateUser(ginContext *gin.Context) {
+	id := ginContext.Param("id")
 
+	err := s.requireAdmin(ginContext)
+	if err != nil {
+		return
+	}
+
+	// Confirming user exists, feels like this could be combined with the update
+	_, err = s.Repo.User(id)
+	if err != nil {
+		loggers.ErrorLog.Printf("Encountered error getting user: %s%v", id, err)
+		ginContext.IndentedJSON(http.StatusNotFound, "Unable to find that user")
+		return
+	}
+
+	//Build user from form provided context
+	newUser, err := s.userFromGinContext(ginContext)
+	if err != nil {
+		return
+	}
+
+	err = s.Repo.UpdateUser(id, newUser)
+	if err != nil {
+		ginContext.IndentedJSON(http.StatusInternalServerError, "There was an error, please try again later")
+		return
+	}
+	ginContext.IndentedJSON(http.StatusOK, "successfully updated user")
+}
+
+// Auth related helpers
+func (s *UserService) userFromGinContext(ginContext *gin.Context) (*models.User, error) {
 	tokens, err := strconv.Atoi(ginContext.PostForm("tokens_remaining"))
 	if err != nil {
 		loggers.ErrorLog.Printf("Error encountered creating user: %s", err)

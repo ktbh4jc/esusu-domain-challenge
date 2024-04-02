@@ -75,9 +75,12 @@
 - [x] MAAS-204: Update GET /memes to take users into consideration - NEED
    -  When a user with no tokens left requests a meme, return a 400
    -  When a user with tokens requests a meme, reduce the token count by 1 and return a meme
-   -  Relevant Users Before ![Relevant Users Before](./screen-shots/204a.png)
-   -  Alice meme request ![Alice meme request](./screen-shots/204b.png)
-   -  Bob meme request ![Bob meme request](./screen-shots/204c.png)
+   -  Relevant Users Before  
+      ![Relevant Users Before](./screen-shots/204a.png)
+   -  Alice meme request  
+      ![Alice meme request](./screen-shots/204b.png)
+   -  Bob meme request  
+      ![Bob meme request](./screen-shots/204c.png)
    -  Relevant users after, notice that Alice has lost a token. ![Relevant users after](./screen-shots/204d.png)
 
 - [x] MAAS-206: Create POST /users endpoint - NEED
@@ -85,15 +88,25 @@
   - non-admins get unauthorized
   - requests without auth header get unauthenticated 
   - A post containing an existing user id will give a 400 bad input with a "auth key already taken" response, because this is the only time I could really have that response and that's funny to me. 
-  - Admin making new user ![Admin new user](./screen-shots/206a.png)
-  - The created user in mongoDB ![new user in mongo](./screen-shots/206b.png)
-  - Unable to make another user with the same auth key ![user already using that auth](./screen-shots/206c.png)
+  - Admin making new user  
+    ![Admin new user](./screen-shots/206a.png)
+  - The created user in mongoDB  
+    ![new user in mongo](./screen-shots/206b.png)
+  - Unable to make another user with the same auth key  
+    ![user already using that auth](./screen-shots/206c.png)
 
 
-- [ ] MAAS-207: Create PATCH /users/[UserId]
+- [x] MAAS-207: Create PATCH /users/[UserId]
   - admins can update existing users
   - non-admins get unauthorized 
   - requests without auth header get unauthenticated 
+  - Before patch: 
+    ![before patch](./screen-shots/207a.png)
+  - patch call: 
+    ![in the year of our patch](./screen-shots/207b.png)
+  - After patch (tokens_remaining is now 55)
+    ![After patch](./screen-shots/207c.png)
+
 - [ ] MAAS-300: Write up scalability plans - NEED
   - At least some of it will be hosting on AWS in lambdas, but the exact breakdown will come later. 
 - [ ] MAAS-400: Write up AI plans - NEED
@@ -108,3 +121,6 @@
   - Vague at the moment because I need to get the NEEDS done before I get distracted into the WANTs
 - [ ] MAAS-301+: See if I can implement some of my 300 plan.
 - [ ] MAAS-500: Standardize and centralize my mocks so there is less copy/pasting
+- [ ] MAAS-501: Update user forms to accept partial user fields where it makes sense
+- [ ] MAAS-502: Add more unit tests to the user_service, specifically for UpdateUser and NewUser. As is, no real way to verify that they are calling my mocks without getting really under the hood. 
+- [ ] MAAS-503: Add more tests to the user_db package. 
