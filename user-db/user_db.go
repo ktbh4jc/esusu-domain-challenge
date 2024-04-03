@@ -24,8 +24,9 @@ type MongoDBUserRepository struct {
 	ctx    *context.Context
 }
 
-// Normally I would say you probably don't want both of these to be the same, but since our auth
-// service is just checking a plaintext string and a bool in our db, I figured this works.
+// Normally I would say you probably don't want both the same repo serving both users and auth
+// to be the same, but since our auth service is just checking a plaintext string and a bool in
+//  our db, I figured this works.
 var _ user_service.UserRepository = &MongoDBUserRepository{}
 var _ auth_service.AuthRepository = &MongoDBUserRepository{}
 var _ meme_service.UserRepository = &MongoDBUserRepository{}
@@ -153,7 +154,7 @@ func (m *MongoDBUserRepository) AllUsers() ([]models.User, error) {
 }
 
 func (m *MongoDBUserRepository) Ping() error {
-	if err := m.client.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
+	if err := m.client.Database("admin").RunCommand(*m.ctx, bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		return &error_types.MongoConnectionError{Err: err}
 	}
 	loggers.InfoLog.Println("Pinged your deployment. You successfully connected to MongoDB!")

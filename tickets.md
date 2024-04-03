@@ -29,8 +29,12 @@
   - query is a free text field
   - ~~For the sake of this assignment, I am going to assume proper input~~ Adding slight validation was pretty quick. 
   - Terminal Screenshot: ![terminal](./screen-shots/102a.png)
-  - Postman Screenshots: ![no params](./screen-shots/102b.png)
-    ![good params](./screen-shots/102c.png)
+  - Postman Screenshots:  
+    No Params
+    ![no params](./screen-shots/102b.png)  
+    Good Params
+    ![good params](./screen-shots/102c.png)  
+    Bad Params
     ![bad input](./screen-shots/102d.png)
 
   
@@ -44,8 +48,6 @@
 
 - [x] MAAS-202: Build out "USER" object that gets stored in the DB  - NEED
   - Contains at least the following fields: `USER_ID`, `AUTH_KEY`, `IS_ADMIN` and `TOKENS_REMAINING`
-  - ~~-`USER_ID` will either be a random number or just an incremented value. ~~
-  - Upon reading a bit more into mongodb, I am going to just have the automatically generated `_id` field count as the user id. 
   - I'm also going to make a couple of more dangerous endpoints for the sake of debugging. Namely `POST /users/reset`, which resets the database to a known user set, and `GET /users/debug` which returns all users regardless of if the requester is an admin. 
   - ![Terminal](./screen-shots/202a.png)
   - ![reset mongo call](./screen-shots/202b.png)

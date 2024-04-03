@@ -23,6 +23,7 @@ var (
 		IsAdmin:         true,
 		AuthKey:         "Super-Secret-Password",
 	}
+
 	defaultUser = &models.User{
 		UserId:          "Danny Default",
 		TokensRemaining: 1000,

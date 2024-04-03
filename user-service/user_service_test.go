@@ -179,17 +179,6 @@ func performRequest(r http.Handler, method string, path string, authHeader strin
 }
 
 func performRequestWithForm(r http.Handler, method string, path string, authHeader string, form map[string]string) *httptest.ResponseRecorder {
-	// buf := new(bytes.Buffer)
-	// w := multipart.NewWriter(buf)
-	// userName, _ := w.CreateFormField("user_id")
-	// userName.Write([]byte("Test name"))
-	// tokensRemaining, _ := w.CreateFormField("tokens_remaining")
-	// tokensRemaining.Write([]byte("123"))
-	// authKey, _ := w.CreateFormField("auth_key")
-	// authKey.Write([]byte("Test auth_key"))
-	// isAdmin, _ := w.CreateFormField("is_admin")
-	// isAdmin.Write([]byte("false"))
-
 	req, _ := http.NewRequest(method, path, nil)
 
 	req.Header.Set("auth", authHeader)
@@ -197,7 +186,6 @@ func performRequestWithForm(r http.Handler, method string, path string, authHead
 	for key, value := range form {
 		req.PostForm.Set(key, value)
 	}
-	// req.Form.Add("user_id", "Test ID")
 	recorder := httptest.NewRecorder()
 	r.ServeHTTP(recorder, req)
 	return recorder

@@ -1,8 +1,6 @@
 package user_service
 
 import (
-	// "encoding/json"
-
 	"fmt"
 	auth_service "maas/auth-service"
 	"maas/loggers"

@@ -27,6 +27,5 @@ func Init() {
 func SilentInit() {
 	InfoLog = log.New(ioutil.Discard, "", 0)
 	WarningLog = log.New(ioutil.Discard, "", 0)
-	// ErrorLog = log.New(ioutil.Discard, "", 0)
-	ErrorLog = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	ErrorLog = log.New(ioutil.Discard, "", 0)
 }

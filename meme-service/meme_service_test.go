@@ -120,7 +120,6 @@ func (m *MockMemeProvider) BuildMeme(params *QueryParams) (*models.Meme, error) 
 	} else {
 		return defaultMeme, nil
 	}
-
 }
 
 func TestMain(m *testing.M) {
@@ -149,7 +148,6 @@ func setUserIdHex(user *models.User, id string) *models.User {
 func buildTestContext(path string) *gin.Context {
 	gin.SetMode(gin.TestMode)
 	recorder := httptest.NewRecorder()
-
 	context, _ := gin.CreateTestContext(recorder)
 	context.Request, _ = http.NewRequest("GET", path, nil)
 	return context

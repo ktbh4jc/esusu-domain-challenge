@@ -2,7 +2,8 @@
 
 This is where I plan to walk you through my approach to this test. 
 
-Design details are in design.md
+Design details are in design.md  
+Tickets are in tickets.md
 
 My first step is to try to list out all requirements for each question in order to make sure I fully grasp the problem. I will also be adding in my initial ideas with after a `>` in the line below, just to show my notes. 
 
@@ -17,8 +18,8 @@ Note: I am doing this on my Ubuntu laptop, so I will be writing these instructio
 
 ## Connecting to MongoDB
 If you are using VS Code you can install the official [MongoDB plugin](https://marketplace.visualstudio.com/items?itemName=mongodb.mongodb-vscode) by launching VS Code Quick Open (`ctrl` + `p`) and then typing `ext install mongodb.mongodb-vscode`
-When prompted, use the connection string `mongodb+srv://default:FQSqZA0PQdEHJQDM@maascluster0.3daukhq.mongodb.net/?retryWrites=true&w=majority&appName=MaasCluster0`
-Note: The above user will expire on Thursday April 4. 
+When prompted, use the connection string `mongodb+srv://default:FQSqZA0PQdEHJQDM@maascluster0.3daukhq.mongodb.net/?retryWrites=true&w=majority&appName=MaasCluster0`  
+Note: The above user will expire on Tuesday April 9. 
 
 ## Requirements
 Memes as a Service (MaaS) is an API for fetching memes with one API call
@@ -39,11 +40,12 @@ example:
 ### Problem 1: 
 - Develop a microservice in Golang to implement the memes API
 
-> Interestingly enough, from the example we can determine that for the lat and lon params they are expecting a float with exactly 6 decimal places of accuracy based on the example latitude ending in a 0. Also worth noting that neither example given is in degrees/minutes/seconds notation, but rather a decimal representation of degrees. 
+  > Interestingly enough, from the example we can determine that for the lat and lon params they are expecting a float with exactly 6 decimal places of accuracy based on the example latitude ending in a 0. Also worth noting that neither example given is in degrees/minutes/seconds notation, but rather a decimal representation of degrees. I'm gonna be real, I don't plan on getting that specific here. 
 - Return a payload
   - Initial payload will probably just be a dummy string
   - Eventually would like to do _some_ form of generation (maybe hit a meme page API?)
   - Alternatively, if I could get some form of automated image manipulation figured out in time, might be worth trying to grab a screenshot of the address and just literally have the top text be the query and the bottom text just be "Bottom text" in impact font... and now I am wondering if imgflip has a free public API I could hit. Or something similar. We'll see.
+  > Update: There is, but it's not _that_ great at the free tier and I didn't have a chance to do anything particularly interesting  
 ### Problem 2
 - We want to charge clients on a per-API-call basis by allowing them to purchase tokens, which are then used to make API calls. 
 - Design and implement a system to track the number of times each client has called the memes API. 
@@ -52,7 +54,7 @@ example:
 - Assume that another team handles the purchasing and they would make an API call to let me know when to add tokens to a client's balance. 
 - Data should persist when server is restarted 
 - Support 100 requests per second 
-  - This makes me think I am _probably_ not gonna do any automated image stuff locally
+  > This makes me think I am _probably_ not gonna do any automated image stuff locally
 
 
 > Initial thought: probably make a fairly simple user api with something like "AuthKey, IsAdmin, and Tokens". Then any user could get their own token data, but only one with isAdmin could get other user's data. Admins can also POST to create new users and PATCH to update token counts. 
@@ -66,7 +68,7 @@ service?
 horizontally, how do you continue to keep track of tokens without slowing down
 the system?
 
-As I was working on MAAS-201 I found [this writeup](https://www.mongodb.com/developer/languages/go/interact-aws-lambda-function-go/) that honestly sums up a decent chunk of how I wanted to answer problem 3 so I thought I would include it 
+> As I was working on MAAS-201 I found [this writeup](https://www.mongodb.com/developer/languages/go/interact-aws-lambda-function-go/) that honestly sums up a decent chunk of how I wanted to answer problem 3 so I thought I would include it 
 
 ### Problem 4
 Make sure only the high rollers get the AI memes. Ensure this doesn't slow anything down (I feel like the solution here is to just have this as part of the token check? Like, each user will have a token count and a "AiEnabled" flag or something)
