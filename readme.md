@@ -16,6 +16,8 @@ Note: I am doing this on my Ubuntu laptop, so I will be writing these instructio
 4) Run `go run .` to start the server
 5) Run `go test ./...` to run all tests
 
+I have also included the Postman collection I developed alongside this project in `Memes as a  Service.postman_collection.json`. To run the curl commands instead, check out `curl.md`
+
 ## Connecting to MongoDB
 If you are using VS Code you can install the official [MongoDB plugin](https://marketplace.visualstudio.com/items?itemName=mongodb.mongodb-vscode) by launching VS Code Quick Open (`ctrl` + `p`) and then typing `ext install mongodb.mongodb-vscode`
 When prompted, use the connection string `mongodb+srv://default:FQSqZA0PQdEHJQDM@maascluster0.3daukhq.mongodb.net/?retryWrites=true&w=majority&appName=MaasCluster0`  

@@ -1,0 +1,400 @@
+{
+	"info": {
+		"_postman_id": "75c9290c-956d-44aa-874a-a53a2fe6da6e",
+		"name": "Memes as a  Service",
+		"description": "A collection of requests to test the Memes as a Service takehome",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33911278"
+	},
+	"item": [
+		{
+			"name": "reset mongo",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/users/reset",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						"reset"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "debug get all users",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/users/debug",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						"debug"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ping mongo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/mongo",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"mongo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Memes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/memes",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"memes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Memes-good query params",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/memes?lat=40.730610&lon=-73.935242&query=food",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"memes"
+					],
+					"query": [
+						{
+							"key": "lat",
+							"value": "40.730610"
+						},
+						{
+							"key": "lon",
+							"value": "-73.935242"
+						},
+						{
+							"key": "query",
+							"value": "food"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Memes - No Tokens",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Bob-Password",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/memes",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"memes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Memes - bad query param",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/memes?lat=40.730610&lon=-73.935242&query=food",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"memes"
+					],
+					"query": [
+						{
+							"key": "lat",
+							"value": "40.730610"
+						},
+						{
+							"key": "lon",
+							"value": "-73.935242"
+						},
+						{
+							"key": "query",
+							"value": "food"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user by id - admin",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Super-Secret-Password",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/users/660b3fa82bc26114912f79fd",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						"660b3fa82bc26114912f79fd"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user by id - self",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Alice-MemeMaster-Password",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/users/660b3fa82bc26114912f79fd",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						"660b3fa82bc26114912f79fd"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user by id - other",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Alice-MemeMaster-Password",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/users",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get all users - admin",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Super-Secret-Password",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/users",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get all users - Non admin",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Alice-MemeMaster-Password",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/users",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "new user",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Super-Secret-Password",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "user_id",
+							"value": "That-Test-User",
+							"type": "text"
+						},
+						{
+							"key": "tokens_remaining",
+							"value": "50",
+							"type": "text"
+						},
+						{
+							"key": "auth_key",
+							"value": "Some-Auth-Key",
+							"type": "text"
+						},
+						{
+							"key": "is_admin",
+							"value": "False",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8080/users",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "auth",
+						"value": "Super-Secret-Password",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "user_id",
+							"value": "That-Test-User",
+							"type": "text"
+						},
+						{
+							"key": "tokens_remaining",
+							"value": "55",
+							"type": "text"
+						},
+						{
+							"key": "auth_key",
+							"value": "Some-Auth-Key",
+							"type": "text"
+						},
+						{
+							"key": "is_admin",
+							"value": "False",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8080/users/660cb9967a3eb43df1682018",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						"660cb9967a3eb43df1682018"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "user id",
+			"value": "660b281d060a0f748cf91f14"
+		}
+	]
+}
