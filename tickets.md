@@ -109,10 +109,10 @@
   - After patch (tokens_remaining is now 55)
     ![After patch](./screen-shots/207c.png)
 
-- [ ] MAAS-300: Write up scalability plans - NEED
+- [x] MAAS-300: Write up scalability plans - NEED
   - At least some of it will be hosting on AWS in lambdas, but the exact breakdown will come later. 
-- [ ] MAAS-400: Write up AI plans - NEED
-- [ ] MAAS-002: Re-read the code, self PR. 
+- [x] MAAS-400: Write up AI plans - NEED
+- [x] MAAS-002: Re-read the code, self PR. 
 - [ ] MAAS-003: Add postman collection
   - [docs](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-and-exporting-overview/)
 

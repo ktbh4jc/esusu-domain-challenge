@@ -21,6 +21,9 @@ If you are using VS Code you can install the official [MongoDB plugin](https://m
 When prompted, use the connection string `mongodb+srv://default:FQSqZA0PQdEHJQDM@maascluster0.3daukhq.mongodb.net/?retryWrites=true&w=majority&appName=MaasCluster0`  
 Note: The above user will expire on Tuesday April 9. 
 
+## Written portion
+My writeup to questions 3 and 4 can be found in `TheEssayPortion.md`. 
+
 ## Requirements
 Memes as a Service (MaaS) is an API for fetching memes with one API call
 
